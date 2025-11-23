@@ -3,4 +3,112 @@ title: "EDA"
 format: html
 ---
 
+# Introduction
+
+You should have an introduction section that
+
+• briefly describes the data and the variables you have to work with (just discuss the ones you’ll investigate/use in your analysis).
+
+• describes the purpose of your EDA and ultimate goal of modeling.
+
+# Data
+
+```{r}
+library(tidyverse)
+diabetes_data <- read.csv('diabetes_binary_health_indicators_BRFSS2015.csv')
+diabetes_data
+```
+
+```{r}
+diabetes_data |>
+  mutate(Diabetes_binary = factor(Diabetes_binary, 
+                                  levels=c(0, 1, 2), 
+                                  labels=c('No Diabetes', 'Prediabetes','Diabetes')),
+         HighBP = factor(HighBP,
+                         levels = c(0, 1),
+                         labels = c('No High BP', 'High BP')),
+         HighChol = factor(HighChol,
+                           levels = c(0, 1),
+                           labels = c('No High Cholesterol', 'High Cholesterol')),
+         CholCheck = factor(CholCheck,
+                            levels = c(0, 1),
+                            labels = c('No Cholesterol Check in Five Years', 
+                                       'Cholesterol Check in Five Years')),
+         Smoker = factor(Smoker,
+                         levels = c(0, 1),
+                         labels = c('Smoked Less than 100 Cigarettes in Life', 
+                                    'Smoked More than 100 Cigarettes in Life')),
+         Stroke = factor(Stroke,
+                         levels = c(0,1),
+                         labels = c('Has Never Had a Stroke', 'Has Had a Stroke')),
+         HeartDiseaseorAttack = factor(HeartDiseaseorAttack,
+                                       levels = c(0, 1),
+                                       labels = c('No CHD or MI', 'CHD or MI')),
+         PhysActivity = factor(PhysActivity,
+                               levels = c(0, 1),
+                               labels = c('No Physical Activity in Past 30 Days', 
+                                          'Physical Activity in Past 30 Days')),
+         Fruits = factor(Fruits,
+                         levels = c(0, 1),
+                         labels = c('Does Not Consume Fruit at Least Once Per Day', 
+                                    'Consumes Fruit at Least Once Per Day')),
+         Veggies = factor(Veggies,
+                          levels = c(0, 1),
+                          labels = c('Does Not Consume Vegetables at Least Once Per Day', 
+                                    'Consumes Vegetables at Least Once Per Day')),
+         HvyAlcoholConsump = factor(HvyAlcoholConsump,
+                                    levels = c(0, 1),
+                                    labels = c('No Heavy Alcohol Consumption', 
+                                               'Heavy Alcohol Consumption')),
+         AnyHealthcare = factor(AnyHealthcare,
+                                levels = c(0, 1),
+                                labels = c('Has No Healthcare', 
+                                           'Has Healthcare')),
+         NoDocbcCost = factor(NoDocbcCost,
+                              levels = c(0, 1),
+                              labels = c('No Time of Not Visiting Doctor Because of Cost',
+                                         'Time Where Did Not Visit Doctor Because of Cost')),
+         GenHlth = factor(GenHlth,
+                          levels = c(1, 2, 3, 4, 5),
+                          labels = c('Excellent', 'Very Good', 'Good', 'Fair', 'Poor')),
+         MentHlth = factor(MentHlth),
+         PhysHlth = factor(PhysHlth),
+         DiffWalk = factor(DiffWalk,
+                           levels = c(0, 1),
+                           labels = c('No Difficulty Walking or Climbing Stairs', 
+                                      'Difficulty Walking or Climbing Stairs')),
+         Sex = factor(Sex,
+                      levels = c(0, 1),
+                      labels = c('Female', 'Male')),
+         Age = factor(Age,
+                      levels = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13),
+                      labels = c('18-24', '25-29', '30-34','35-39', '40-44', '45-49',
+                                 '50-54', '55-59', '60-64', '65-69', '70-74', '75-79',
+                                 '80 or Older')),
+         Education = factor(Education,
+                            levels = c(1, 2, 3, 4, 5, 6),
+                            labels = c('Never attended school or only kindergarten',
+                                       'Grades 1-8 (Elementary)',
+                                       'Grades 9-11 (Some high School)',
+                                       'Grade 12 or GED (High School Graduate)',
+                                       'College 1 Year to 3 Years (Some College or Technical School)',
+                                       'College 4 Years or More (College Graduate)')),
+         Income = factor(Income,
+                         levels = c(1, 2, 3, 4, 5, 6, 7, 8),
+                         labels = c('Less than $10,000',
+                                    '$10,000 - $15,000',
+                                    '$15,000 - $20,000',
+                                    '$20,000 - $25,000',
+                                    '$25,000 - $35,000',
+                                    '$35,000 - $50,000',
+                                    '$50,000 - $75,000',
+                                    '$75,000 or More'
+                                    ))
+  )
+```
+
+# Summarizations 
+
+You should then produce meaningful summary statistics and plots about the data you are working with (especially as it relates to your response). Although a best practice would be to split the data at hand into a training and testing set first, go ahead and do your EDA on the full data. Be sure to have a narrative about what you are exploring and what the summaries and graphs you created say about the relationships in your data.
+
 [Click here for the Modeling Page](Modeling.html)
