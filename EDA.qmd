@@ -3,3 +3,4 @@ title: "EDA"
 format: html
 ---
 
+[Click here for the Modeling Page](Modeling.html)
