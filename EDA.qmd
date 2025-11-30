@@ -16,11 +16,11 @@ You should have an introduction section that
 ```{r}
 library(tidyverse)
 diabetes_data <- read.csv('diabetes_binary_health_indicators_BRFSS2015.csv')
-diabetes_data
+head(diabetes_data)
 ```
 
 ```{r}
-diabetes_data |>
+diabetes_convert <- diabetes_data |>
   mutate(Diabetes_binary = factor(Diabetes_binary, 
                                   levels=c(0, 1, 2), 
                                   labels=c('No Diabetes', 'Prediabetes','Diabetes')),
@@ -105,10 +105,95 @@ diabetes_data |>
                                     '$75,000 or More'
                                     ))
   )
+head(diabetes_convert)
 ```
 
-# Summarizations 
+```{r}
+sum_na <- function(column){
+  sum(is.na(column) + is.null(column) + is.nan(column))
+}
+na_counts <- diabetes_convert |>
+  summarize(across(everything(), sum_na))
+na_counts
+```
+
+# Summarizations
 
 You should then produce meaningful summary statistics and plots about the data you are working with (especially as it relates to your response). Although a best practice would be to split the data at hand into a training and testing set first, go ahead and do your EDA on the full data. Be sure to have a narrative about what you are exploring and what the summaries and graphs you created say about the relationships in your data.
+
+```{r}
+diabetes_convert |>
+  group_by(Diabetes_binary) |>
+  summarize(across(BMI, .fns = list("mean" = mean, 
+                                       "median" = median, 
+                                       "var" = var, 
+                                       "sd" = sd, 
+                                       "IQR" = IQR), .names = "{.fn}_{.col}"))
+```
+
+```{r}
+diabetes_convert |>
+  group_by(Sex, Diabetes_binary) |>
+  summarize(count=n()) |>
+  pivot_wider(names_from = Diabetes_binary, values_from = count)
+```
+
+```{r}
+diabetes_convert |>
+  group_by(Age, Diabetes_binary) |>
+  summarize(count=n()) |>
+  pivot_wider(names_from = Diabetes_binary, values_from = count)
+```
+
+```{r}
+diabetes_convert |>
+  group_by(AnyHealthcare,HighBP,HighChol, Diabetes_binary) |>
+  summarize(count=n()) |>
+  pivot_wider(names_from = Diabetes_binary, values_from = count)
+```
+
+```{r}
+diabetes_convert |>
+  group_by(Income,Diabetes_binary) |>
+  summarize(count=n()) |>
+  pivot_wider(names_from = Diabetes_binary, values_from = count)
+```
+
+```{r}
+diabetes_convert |>
+  group_by(Education, Diabetes_binary) |>
+  summarize(count=n()) |>
+  pivot_wider(names_from = Diabetes_binary, values_from = count)
+```
+
+```{r}
+summary_stats <- diabetes_convert |> 
+  group_by(Diabetes_binary, Sex, Age) |> 
+  summarize(across(BMI, 
+                   .fns = list(
+                     "mean" = mean, "median" = median
+                     ), 
+                   .names = "{.fn}_{.col}"
+                   )
+            ) 
+summary_stats
+```
+
+```{r}
+library(ggplot2)
+ggplot(summary_stats, aes(x = Diabetes_binary, y=mean_BMI, fill = Sex)) +
+  geom_col(stat = 'identity', position = 'dodge') +
+  facet_wrap(~Age) +
+  labs(x='Diabetes Status',
+       y='Average BMI',
+       title = 'Average BMI versus Diabetes Status Over Age Groups Across Sex') +
+  guides(x=guide_axis(n.dodge = 2))
+```
+
+```{r}
+ggplot(diabetes_convert, aes(x=BMI,fill=Diabetes_binary, alpha = 5, linetype = Sex)) +
+  geom_density(kernel='gaussian') +
+  labs(title = 'Density of BMI Across Diabetes Status and Sex')
+```
 
 [Click here for the Modeling Page](Modeling.html)
