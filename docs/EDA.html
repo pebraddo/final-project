@@ -143,6 +143,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="data" class="level1">
 <h1>Data</h1>
+<p>First, let’s bring in the data from our local R Project .csv and name it <code>diabetes_data</code>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
@@ -190,6 +191,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 6         6      8</code></pre>
 </div>
 </div>
+<p>That is quite interesting… our initial data makes no sense! Most of these variables are categorical, but they are saved right now as numerical. Let’s fix that by making them factor-type variables and saving this converted data as <code>diabetes_convert</code>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="ot">&lt;-</span> diabetes_data <span class="sc">|&gt;</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Diabetes_binary =</span> <span class="fu">factor</span>(Diabetes_binary, </span>
@@ -357,6 +359,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 6   $75,000 or More</code></pre>
 </div>
 </div>
+<p>Much better. Now, we can check each variable for ‘missingness’ by using a counting function to show how many entries are ‘NA’, ‘NULL’, or ‘NaN’ in each column.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>sum_na <span class="ot">&lt;-</span> <span class="cf">function</span>(column){</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(<span class="fu">is.na</span>(column) <span class="sc">+</span> <span class="fu">is.null</span>(column) <span class="sc">+</span> <span class="fu">is.nan</span>(column))</span>
@@ -375,10 +378,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 1         0      0</code></pre>
 </div>
 </div>
+<p>Looks like we are in luck… No missing entries in any columns. Phew.</p>
 </section>
 <section id="summarizations" class="level1">
 <h1>Summarizations</h1>
-<p>You should then produce meaningful summary statistics and plots about the data you are working with (especially as it relates to your response). Although a best practice would be to split the data at hand into a training and testing set first, go ahead and do your EDA on the full data. Be sure to have a narrative about what you are exploring and what the summaries and graphs you created say about the relationships in your data.</p>
+<p>Now that we have the data cleaned and ready, we can explore summaries and graphs about the entire data set, which we’ve named <code>diabetes_convert</code>.</p>
+<p>I began by summarizing our response variable of interest: <code>Diabetes_binary</code>, which indicates the diabetic status of the population, across the only numeric variable: <code>BMI</code>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="sc">|&gt;</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Diabetes_binary) <span class="sc">|&gt;</span></span>
@@ -395,123 +400,157 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 2 Prediabetes         31.9         31    54.2   7.36       8</code></pre>
 </div>
 </div>
+<p>Excellent, now we can see the differences in the mean, median, variance, standard deviation, and interquartile range of the BMIs for both patients with no diabetic status and prediabetic status.</p>
+<p>Patients with prediabetic status have a 4 point average and median difference of BMI from patients with no diabetes. The variance and standard deviations are also wider for prediabetic patients than those without diabetes.</p>
+<p>Let’s check out the <strong>contingency table</strong> of sex versus diabetic status.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="sc">|&gt;</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Sex, Diabetes_binary) <span class="sc">|&gt;</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">count=</span><span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> Diabetes_binary, <span class="at">values_from =</span> count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Proportion =</span> count<span class="sc">/</span><span class="fu">sum</span>(count)) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'Sex'. You can override using the `.groups`
 argument.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 2 × 3
+<pre><code># A tibble: 4 × 4
 # Groups:   Sex [2]
-  Sex    `No Diabetes` Prediabetes
-  &lt;fct&gt;          &lt;int&gt;       &lt;int&gt;
-1 Female        123563       18411
-2 Male           94771       16935</code></pre>
+  Sex    Diabetes_binary  count Proportion
+  &lt;fct&gt;  &lt;fct&gt;            &lt;int&gt;      &lt;dbl&gt;
+1 Female No Diabetes     123563      0.870
+2 Female Prediabetes      18411      0.130
+3 Male   No Diabetes      94771      0.848
+4 Male   Prediabetes      16935      0.152</code></pre>
 </div>
 </div>
+<p>Perfect! We can see that for females, the proportion of patients with prediabetes versus no diabetes is around 13%, while 15% of the male patients are prediabetic. I wonder what else we can find…</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="sc">|&gt;</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Age, Diabetes_binary) <span class="sc">|&gt;</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">count=</span><span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> Diabetes_binary, <span class="at">values_from =</span> count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Proportion =</span> count<span class="sc">/</span><span class="fu">sum</span>(count)) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'Age'. You can override using the `.groups`
 argument.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 13 × 3
+<pre><code># A tibble: 26 × 4
 # Groups:   Age [13]
-   Age         `No Diabetes` Prediabetes
-   &lt;fct&gt;               &lt;int&gt;       &lt;int&gt;
- 1 18-24                5622          78
- 2 25-29                7458         140
- 3 30-34               10809         314
- 4 35-39               13197         626
- 5 40-44               15106        1051
- 6 45-49               18077        1742
- 7 50-54               23226        3088
- 8 55-59               26569        4263
- 9 60-64               27511        5733
-10 65-69               25636        6558
-11 70-74               18392        5141
-12 75-79               12577        3403
-13 80 or Older         14154        3209</code></pre>
+   Age   Diabetes_binary count Proportion
+   &lt;fct&gt; &lt;fct&gt;           &lt;int&gt;      &lt;dbl&gt;
+ 1 18-24 No Diabetes      5622     0.986 
+ 2 18-24 Prediabetes        78     0.0137
+ 3 25-29 No Diabetes      7458     0.982 
+ 4 25-29 Prediabetes       140     0.0184
+ 5 30-34 No Diabetes     10809     0.972 
+ 6 30-34 Prediabetes       314     0.0282
+ 7 35-39 No Diabetes     13197     0.955 
+ 8 35-39 Prediabetes       626     0.0453
+ 9 40-44 No Diabetes     15106     0.935 
+10 40-44 Prediabetes      1051     0.0650
+# ℹ 16 more rows</code></pre>
 </div>
 </div>
+<p>It appears that the proportion of prediabetic vs.&nbsp;non-diabetic patients increases until age group 70-74, then it decreases a little.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="sc">|&gt;</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(AnyHealthcare,HighBP,HighChol, Diabetes_binary) <span class="sc">|&gt;</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">count=</span><span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> Diabetes_binary, <span class="at">values_from =</span> count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Proportion =</span> count<span class="sc">/</span><span class="fu">sum</span>(count)) <span class="sc">|&gt;</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> Diabetes_binary, <span class="at">values_from =</span> count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'AnyHealthcare', 'HighBP', 'HighChol'. You
 can override using the `.groups` argument.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 8 × 5
+<pre><code># A tibble: 16 × 6
 # Groups:   AnyHealthcare, HighBP, HighChol [8]
-  AnyHealthcare     HighBP     HighChol            `No Diabetes` Prediabetes
-  &lt;fct&gt;             &lt;fct&gt;      &lt;fct&gt;                       &lt;int&gt;       &lt;int&gt;
-1 Has No Healthcare No High BP No High Cholesterol          6199         200
-2 Has No Healthcare No High BP High Cholesterol             1529         203
-3 Has No Healthcare High BP    No High Cholesterol          1604         290
-4 Has No Healthcare High BP    High Cholesterol             1663         729
-5 Has Healthcare    No High BP No High Cholesterol         91452        4069
-6 Has Healthcare    No High BP High Cholesterol            36929        4270
-7 Has Healthcare    High BP    No High Cholesterol         35174        7101
-8 Has Healthcare    High BP    High Cholesterol            43784       18484</code></pre>
+   AnyHealthcare     HighBP     HighChol    Proportion `No Diabetes` Prediabetes
+   &lt;fct&gt;             &lt;fct&gt;      &lt;fct&gt;            &lt;dbl&gt;         &lt;int&gt;       &lt;int&gt;
+ 1 Has No Healthcare No High BP No High Ch…     0.969           6199          NA
+ 2 Has No Healthcare No High BP No High Ch…     0.0313            NA         200
+ 3 Has No Healthcare No High BP High Chole…     0.883           1529          NA
+ 4 Has No Healthcare No High BP High Chole…     0.117             NA         203
+ 5 Has No Healthcare High BP    No High Ch…     0.847           1604          NA
+ 6 Has No Healthcare High BP    No High Ch…     0.153             NA         290
+ 7 Has No Healthcare High BP    High Chole…     0.695           1663          NA
+ 8 Has No Healthcare High BP    High Chole…     0.305             NA         729
+ 9 Has Healthcare    No High BP No High Ch…     0.957          91452          NA
+10 Has Healthcare    No High BP No High Ch…     0.0426            NA        4069
+11 Has Healthcare    No High BP High Chole…     0.896          36929          NA
+12 Has Healthcare    No High BP High Chole…     0.104             NA        4270
+13 Has Healthcare    High BP    No High Ch…     0.832          35174          NA
+14 Has Healthcare    High BP    No High Ch…     0.168             NA        7101
+15 Has Healthcare    High BP    High Chole…     0.703          43784          NA
+16 Has Healthcare    High BP    High Chole…     0.297             NA       18484</code></pre>
 </div>
 </div>
+<p>This contingency table tells an interesting story…patients with no healthcare, high blood pressure, and high cholesterol have the highest rates of prediabetes.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="sc">|&gt;</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Income,Diabetes_binary) <span class="sc">|&gt;</span></span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">count=</span><span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> Diabetes_binary, <span class="at">values_from =</span> count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Proportion =</span> count<span class="sc">/</span><span class="fu">sum</span>(count)) <span class="sc">|&gt;</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> Diabetes_binary, <span class="at">values_from =</span> count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'Income'. You can override using the
 `.groups` argument.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 8 × 3
+<pre><code># A tibble: 16 × 4
 # Groups:   Income [8]
-  Income            `No Diabetes` Prediabetes
-  &lt;fct&gt;                     &lt;int&gt;       &lt;int&gt;
-1 Less than $10,000          7428        2383
-2 $10,000 - $15,000          8697        3086
-3 $15,000 - $20,000         12426        3568
-4 $20,000 - $25,000         16081        4054
-5 $25,000 - $35,000         21379        4504
-6 $35,000 - $50,000         31179        5291
-7 $50,000 - $75,000         37954        5265
-8 $75,000 or More           83190        7195</code></pre>
+   Income            Proportion `No Diabetes` Prediabetes
+   &lt;fct&gt;                  &lt;dbl&gt;         &lt;int&gt;       &lt;int&gt;
+ 1 Less than $10,000     0.757           7428          NA
+ 2 Less than $10,000     0.243             NA        2383
+ 3 $10,000 - $15,000     0.738           8697          NA
+ 4 $10,000 - $15,000     0.262             NA        3086
+ 5 $15,000 - $20,000     0.777          12426          NA
+ 6 $15,000 - $20,000     0.223             NA        3568
+ 7 $20,000 - $25,000     0.799          16081          NA
+ 8 $20,000 - $25,000     0.201             NA        4054
+ 9 $25,000 - $35,000     0.826          21379          NA
+10 $25,000 - $35,000     0.174             NA        4504
+11 $35,000 - $50,000     0.855          31179          NA
+12 $35,000 - $50,000     0.145             NA        5291
+13 $50,000 - $75,000     0.878          37954          NA
+14 $50,000 - $75,000     0.122             NA        5265
+15 $75,000 or More       0.920          83190          NA
+16 $75,000 or More       0.0796            NA        7195</code></pre>
 </div>
 </div>
+<p>26.2% of patients in the $10k to $15k income range have prediabetic status, which is the highest percentage across income groups, followed by 24.2% of patients in the $10k or less income group.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="sc">|&gt;</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Education, Diabetes_binary) <span class="sc">|&gt;</span></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">count=</span><span class="fu">n</span>()) <span class="sc">|&gt;</span></span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> Diabetes_binary, <span class="at">values_from =</span> count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Proportion =</span> count<span class="sc">/</span><span class="fu">sum</span>(count)) <span class="sc">|&gt;</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> Diabetes_binary, <span class="at">values_from =</span> count)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>`summarise()` has grouped output by 'Education'. You can override using the
 `.groups` argument.</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 6 × 3
+<pre><code># A tibble: 12 × 4
 # Groups:   Education [6]
-  Education                                            `No Diabetes` Prediabetes
-  &lt;fct&gt;                                                        &lt;int&gt;       &lt;int&gt;
-1 Never attended school or only kindergarten                     127          47
-2 Grades 1-8 (Elementary)                                       2860        1183
-3 Grades 9-11 (Some high School)                                7182        2296
-4 Grade 12 or GED (High School Graduate)                       51684       11066
-5 College 1 Year to 3 Years (Some College or Technica…         59556       10354
-6 College 4 Years or More (College Graduate)                   96925       10400</code></pre>
+   Education                                Proportion `No Diabetes` Prediabetes
+   &lt;fct&gt;                                         &lt;dbl&gt;         &lt;int&gt;       &lt;int&gt;
+ 1 Never attended school or only kindergar…     0.730            127          NA
+ 2 Never attended school or only kindergar…     0.270             NA          47
+ 3 Grades 1-8 (Elementary)                      0.707           2860          NA
+ 4 Grades 1-8 (Elementary)                      0.293             NA        1183
+ 5 Grades 9-11 (Some high School)               0.758           7182          NA
+ 6 Grades 9-11 (Some high School)               0.242             NA        2296
+ 7 Grade 12 or GED (High School Graduate)       0.824          51684          NA
+ 8 Grade 12 or GED (High School Graduate)       0.176             NA       11066
+ 9 College 1 Year to 3 Years (Some College…     0.852          59556          NA
+10 College 1 Year to 3 Years (Some College…     0.148             NA       10354
+11 College 4 Years or More (College Gradua…     0.903          96925          NA
+12 College 4 Years or More (College Gradua…     0.0969            NA       10400</code></pre>
 </div>
 </div>
+<p>Folks with only elementary education (29.3%) or lower (27%) had a much higher proportion of prediabetes status than any further education category.</p>
+<p>We can now check to see the diabetes status, sex, age, and BMI statistics all in one table.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>summary_stats <span class="ot">&lt;-</span> diabetes_convert <span class="sc">|&gt;</span> </span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Diabetes_binary, Sex, Age) <span class="sc">|&gt;</span> </span>
@@ -545,6 +584,8 @@ using the `.groups` argument.</code></pre>
 # ℹ 42 more rows</code></pre>
 </div>
 </div>
+<p>This is hard to comprehend, so let’s turn it into a nice plot.</p>
+<p>I’m using faceting to show the average BMI for non-diabetics versus prediabetics and sex across age groups.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(summary_stats, <span class="fu">aes</span>(<span class="at">x =</span> Diabetes_binary, <span class="at">y=</span>mean_BMI, <span class="at">fill =</span> Sex)) <span class="sc">+</span></span>
@@ -552,7 +593,7 @@ using the `.groups` argument.</code></pre>
 <span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>Age) <span class="sc">+</span></span>
 <span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x=</span><span class="st">'Diabetes Status'</span>,</span>
 <span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">y=</span><span class="st">'Average BMI'</span>,</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">'Average BMI versus Diabetes Status Over Age Groups Across Sex'</span>) <span class="sc">+</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">'Average BMI versus Diabetes Status and Sex Across Age Groups'</span>) <span class="sc">+</span></span>
 <span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">guides</span>(<span class="at">x=</span><span class="fu">guide_axis</span>(<span class="at">n.dodge =</span> <span class="dv">2</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
@@ -562,6 +603,8 @@ using the `.groups` argument.</code></pre>
 </div>
 </div>
 </div>
+<p>We can see that in each age group, regardless of the sex of the patient, patients with prediabetes have higher average BMIs than patients with no diabetes status.</p>
+<p>Let’s check out a density plot to investigate the BMI variable.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(diabetes_convert, <span class="fu">aes</span>(<span class="at">x=</span>BMI,<span class="at">fill=</span>Diabetes_binary, <span class="at">alpha =</span> <span class="dv">5</span>, <span class="at">linetype =</span> Sex)) <span class="sc">+</span></span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="at">kernel=</span><span class="st">'gaussian'</span>) <span class="sc">+</span></span>
@@ -574,6 +617,7 @@ using the `.groups` argument.</code></pre>
 </div>
 </div>
 </div>
+<p>This density plot shows the varying frequencies of each BMI across both Diabetes Status and Sex. The ‘No Diabetes’ and ‘Prediabetes’ plots both have similar shapes, but the ‘No Diabetes’ plot is centered around a lower BMI. There appear to be more male patients than female patients as well. Both male and female patients follow similar patterns within the plots and there are only a few patients with BMIs greater than 50: where these are exclusively prediabetic patients.</p>
 <p><a href="Modeling.html">Click here for the Modeling Page</a></p>
 
 

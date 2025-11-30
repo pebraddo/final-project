@@ -13,11 +13,15 @@ You should have an introduction section that
 
 # Data
 
+First, let's bring in the data from our local R Project .csv and name it `diabetes_data`.
+
 ```{r}
 library(tidyverse)
 diabetes_data <- read.csv('diabetes_binary_health_indicators_BRFSS2015.csv')
 head(diabetes_data)
 ```
+
+That is quite interesting... our initial data makes no sense! Most of these variables are categorical, but they are saved right now as numerical. Let's fix that by making them factor-type variables and saving this converted data as `diabetes_convert`.
 
 ```{r}
 diabetes_convert <- diabetes_data |>
@@ -106,7 +110,10 @@ diabetes_convert <- diabetes_data |>
                                     ))
   )
 head(diabetes_convert)
+
 ```
+
+Much better. Now, we can check each variable for 'missingness' by using a counting function to show how many entries are 'NA', 'NULL', or 'NaN' in each column.
 
 ```{r}
 sum_na <- function(column){
@@ -117,9 +124,13 @@ na_counts <- diabetes_convert |>
 na_counts
 ```
 
+Looks like we are in luck... No missing entries in any columns. Phew.
+
 # Summarizations
 
-You should then produce meaningful summary statistics and plots about the data you are working with (especially as it relates to your response). Although a best practice would be to split the data at hand into a training and testing set first, go ahead and do your EDA on the full data. Be sure to have a narrative about what you are exploring and what the summaries and graphs you created say about the relationships in your data.
+Now that we have the data cleaned and ready, we can explore summaries and graphs about the entire data set, which we've named `diabetes_convert`.
+
+I began by summarizing our response variable of interest: `Diabetes_binary`, which indicates the diabetic status of the population, across the only numeric variable: `BMI`.
 
 ```{r}
 diabetes_convert |>
@@ -131,40 +142,62 @@ diabetes_convert |>
                                        "IQR" = IQR), .names = "{.fn}_{.col}"))
 ```
 
+Excellent, now we can see the differences in the mean, median, variance, standard deviation, and interquartile range of the BMIs for both patients with no diabetic status and prediabetic status.
+
+Patients with prediabetic status have a 4 point average and median difference of BMI from patients with no diabetes. The variance and standard deviations are also wider for prediabetic patients than those without diabetes.
+
+Let's check out the **contingency table** of sex versus diabetic status.
+
 ```{r}
 diabetes_convert |>
   group_by(Sex, Diabetes_binary) |>
   summarize(count=n()) |>
-  pivot_wider(names_from = Diabetes_binary, values_from = count)
+  mutate(Proportion = count/sum(count)) 
 ```
+
+Perfect! We can see that for females, the proportion of patients with prediabetes versus no diabetes is around 13%, while 15% of the male patients are prediabetic. I wonder what else we can find...
 
 ```{r}
 diabetes_convert |>
   group_by(Age, Diabetes_binary) |>
   summarize(count=n()) |>
-  pivot_wider(names_from = Diabetes_binary, values_from = count)
+  mutate(Proportion = count/sum(count)) 
+  
 ```
+
+It appears that the proportion of prediabetic vs. non-diabetic patients increases until age group 70-74, then it decreases a little.
 
 ```{r}
 diabetes_convert |>
   group_by(AnyHealthcare,HighBP,HighChol, Diabetes_binary) |>
   summarize(count=n()) |>
+  mutate(Proportion = count/sum(count)) |>
   pivot_wider(names_from = Diabetes_binary, values_from = count)
 ```
+
+This contingency table tells an interesting story...patients with no healthcare, high blood pressure, and high cholesterol have the highest rates of prediabetes.
 
 ```{r}
 diabetes_convert |>
   group_by(Income,Diabetes_binary) |>
   summarize(count=n()) |>
+  mutate(Proportion = count/sum(count)) |>
   pivot_wider(names_from = Diabetes_binary, values_from = count)
 ```
+
+26.2% of patients in the \$10k to \$15k income range have prediabetic status, which is the highest percentage across income groups, followed by 24.2% of patients in the \$10k or less income group.
 
 ```{r}
 diabetes_convert |>
   group_by(Education, Diabetes_binary) |>
   summarize(count=n()) |>
+  mutate(Proportion = count/sum(count)) |>
   pivot_wider(names_from = Diabetes_binary, values_from = count)
 ```
+
+Folks with only elementary education (29.3%) or lower (27%) had a much higher proportion of prediabetes status than any further education category.
+
+We can now check to see the diabetes status, sex, age, and BMI statistics all in one table.
 
 ```{r}
 summary_stats <- diabetes_convert |> 
@@ -179,6 +212,10 @@ summary_stats <- diabetes_convert |>
 summary_stats
 ```
 
+This is hard to comprehend, so let's turn it into a nice plot.
+
+I'm using faceting to show the average BMI for non-diabetics versus prediabetics and sex across age groups.
+
 ```{r}
 library(ggplot2)
 ggplot(summary_stats, aes(x = Diabetes_binary, y=mean_BMI, fill = Sex)) +
@@ -186,14 +223,20 @@ ggplot(summary_stats, aes(x = Diabetes_binary, y=mean_BMI, fill = Sex)) +
   facet_wrap(~Age) +
   labs(x='Diabetes Status',
        y='Average BMI',
-       title = 'Average BMI versus Diabetes Status Over Age Groups Across Sex') +
+       title = 'Average BMI versus Diabetes Status and Sex Across Age Groups') +
   guides(x=guide_axis(n.dodge = 2))
 ```
+
+We can see that in each age group, regardless of the sex of the patient, patients with prediabetes have higher average BMIs than patients with no diabetes status.
+
+Let's check out a density plot to investigate the BMI variable.
 
 ```{r}
 ggplot(diabetes_convert, aes(x=BMI,fill=Diabetes_binary, alpha = 5, linetype = Sex)) +
   geom_density(kernel='gaussian') +
   labs(title = 'Density of BMI Across Diabetes Status and Sex')
 ```
+
+This density plot shows the varying frequencies of each BMI across both Diabetes Status and Sex. The 'No Diabetes' and 'Prediabetes' plots both have similar shapes, but the 'No Diabetes' plot is centered around a lower BMI. There appear to be more male patients than female patients as well. Both male and female patients follow similar patterns within the plots and there are only a few patients with BMIs greater than 50: where these are exclusively prediabetic patients.
 
 [Click here for the Modeling Page](Modeling.html)
