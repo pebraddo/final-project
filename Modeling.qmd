@@ -18,9 +18,11 @@ the other file).
 Then, split the data into a training (70% of the data) and test set (30%
 of the data). Set a seed to make things reproducible.
 
-```{r echo=FALSE}
+```{r}
+diabetes_convert <- readRDS('diabetes_convert.rds')
 library(tidymodels)
 set.seed(11)
+
 diabetes_convert <- diabetes_convert |>
   mutate(Diabetes_binary = factor(Diabetes_binary))
 diabetes_split <- initial_split(diabetes_convert, prop = 0.7)
@@ -113,6 +115,13 @@ best_tree <- select_best(tree_tune, metric = 'mn_log_loss')
 best_tree
 ```
 
+```{r}
+tree_final_wkf <- tree_wkf |>
+  finalize_workflow(best_tree)
+tree_final_fit <- tree_final_wkf |>
+  last_fit(diabetes_split, metrics = log_loss_metric)
+```
+
 ## Random Forest
 
 You should provide a thorough explanation of what a random forest is and
@@ -122,8 +131,8 @@ the mtry parameter and choose the best model (based on 5 fold CV on the
 training set). Include at least 5 predictors in this model.
 
 ```{r}
-rf_mod <- rand_forest(mtry=tune()) |>
-  set_engine('ranger') |>
+rf_mod <- rand_forest(mtry=tune(), trees=50) |>
+  set_engine('ranger', importance = 'impurity') |>
   set_mode('classification')
 rf_wkf <- workflow() |>
   add_recipe(diabetes_rec) |>
@@ -131,13 +140,70 @@ rf_wkf <- workflow() |>
 ```
 
 ```{r}
-#rf_fit <- rf_wkf |>
- # tune_grid(resamples = diabetes_CV_folds,
-  #          grid = 7,
-  #          metrics = log_loss_metric)
+rf_fit <- rf_wkf |>
+  tune_grid(resamples = diabetes_CV_folds,
+            grid = 7,
+            metrics = log_loss_metric)
+```
+
+```{r}
+rf_fit |> collect_metrics()
+```
+
+```{r}
+best_forest <- select_best(rf_fit, metric = 'mn_log_loss')
+best_forest
+```
+
+```{r}
+rf_final_wkf <- rf_wkf |>
+  finalize_workflow(best_forest)
+rf_final_fit <- rf_final_wkf |>
+  last_fit(diabetes_split, metrics = log_loss_metric)
 ```
 
 ## Final Model Selection
 
 You should now have two best models (one for each model type above).
 Compare both models on the test set and declare an overall winner!
+
+```{r}
+rbind(
+  tree_final_fit |> 
+    collect_metrics() |>
+    mutate(Model = 'Classification Tree', .before = '.metric'),
+  rf_final_fit |> 
+    collect_metrics()|>
+    mutate(Model = 'Random Forest', .before = '.metric'))
+```
+
+```{r}
+rf_final_fit |>
+  extract_fit_parsnip()
+```
+
+```{r}
+get_rand_for_importance <- function(x) {
+  x |> 
+    extract_fit_parsnip() |>
+    vip::vi()
+}
+
+ctrl_imp <- control_grid(extract = get_rand_for_importance)
+
+cells_resampling <-
+  rf_final_wkf |>
+  fit_resamples(diabetes_CV_folds, control = ctrl_imp)
+cells_resampling
+
+cells_resampling_2 <- cells_resampling |>
+  select(id, .extracts) |>
+  unnest(.extracts) |>
+  unnest(.extracts) 
+
+cells_resampling_2
+ggplot(cells_resampling_2, aes(x=Variable, y=Importance)) +
+  geom_bar(stat = 'identity')+
+  labs(title='Variable Importance for Random Forest Model', x='Variable', y='Importance') +
+  coord_flip()
+```
