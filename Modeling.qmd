@@ -1,5 +1,143 @@
 ---
 title: "Modeling"
 format: html
+editor: 
+  markdown: 
+    wrap: 72
 ---
 
+# Modeling
+
+## Introduction
+
+Start with a basic introduction (feel free to repeat some things from
+the other file).
+
+## Data Split
+
+Then, split the data into a training (70% of the data) and test set (30%
+of the data). Set a seed to make things reproducible.
+
+```{r echo=FALSE}
+library(tidymodels)
+set.seed(11)
+diabetes_convert <- diabetes_convert |>
+  mutate(Diabetes_binary = factor(Diabetes_binary))
+diabetes_split <- initial_split(diabetes_convert, prop = 0.7)
+diabetes_train <- training(diabetes_split)
+diabetes_test <- testing(diabetes_split)
+
+```
+
+The goal is to create models for predicting the Diabetes_binary variable
+(using tidymodels). We’ll use log-loss as our metric to evaluate the
+models. For both model types, use log-loss with 5 fold cross-validation
+to select the best model from that family of models. You should set up
+your own grid of tuning parameters for each model (even if it is just
+the number of levels to look at).
+
+We are using our split data to create our 5 cross validation folds.
+
+```{r}
+
+diabetes_CV_folds <- vfold_cv(diabetes_train, 5, strata = Diabetes_binary)
+
+log_loss_metric <- metric_set(mn_log_loss)
+```
+
+Now we can create the `recipe` we will use for all of the models, where
+`Diabetes_binary` is the response/outcome.
+
+```{r}
+diabetes_rec <-
+  recipe(Diabetes_binary ~., data = diabetes_train) |>
+  step_novel(all_nominal_predictors()) |>
+  step_unknown(all_nominal_predictors()) |>
+  step_zv(all_predictors()) |>
+  step_normalize(all_numeric_predictors())
+diabetes_rec
+```
+
+## Classification Tree
+
+You should provide a thorough explanation of what a classification tree
+model is. Then you should fit a classification tree with varying values
+for the complexity parameter and choose the best model (based on 5 fold
+CV on the training set). Include at least 5 predictors in this model.
+
+Let's define the model and the engine, where we want to using a tuning
+grid to find the optimal `cost_complexity`.
+
+```{r}
+tree_mod <- 
+  decision_tree(
+    cost_complexity = tune()
+  ) |>
+  set_engine("rpart") |>
+  set_mode("classification")
+```
+
+The next chunk of code is the creation of our workflow, where we add the
+recipe and the model.
+
+```{r}
+tree_wkf <- workflow() |>
+  add_recipe(diabetes_rec) |>
+  add_model(tree_mod)
+```
+
+```{r}
+tree_grid <- tibble(
+  cost_complexity = c(0.0001, 0.001, 0.01, 0.1)
+)
+```
+
+```{r}
+tree_tune <- tune_grid(
+  tree_wkf,
+  resamples = diabetes_CV_folds,
+  grid = tree_grid,
+  metrics = log_loss_metric,
+  control = control_grid(save_pred = TRUE)
+)
+tree_tune
+```
+
+```{r}
+tree_tune |>
+  collect_metrics()
+```
+
+```{r}
+best_tree <- select_best(tree_tune, metric = 'mn_log_loss')
+best_tree
+```
+
+## Random Forest
+
+You should provide a thorough explanation of what a random forest is and
+why we might use it (be sure to relate this to a basic classification
+tree). You should then fit a random forest model with varying values for
+the mtry parameter and choose the best model (based on 5 fold CV on the
+training set). Include at least 5 predictors in this model.
+
+```{r}
+rf_mod <- rand_forest(mtry=tune()) |>
+  set_engine('ranger') |>
+  set_mode('classification')
+rf_wkf <- workflow() |>
+  add_recipe(diabetes_rec) |>
+  add_model(rf_mod)
+```
+
+```{r}
+#rf_fit <- rf_wkf |>
+ # tune_grid(resamples = diabetes_CV_folds,
+  #          grid = 7,
+  #          metrics = log_loss_metric)
+```
+
+## Final Model Selection
+
+You should now have two best models (one for each model type above).
+Compare both models on the test set and declare an overall winner!

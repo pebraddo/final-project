@@ -100,8 +100,32 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="modeling" class="level1">
+<h1>Modeling</h1>
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Start with a basic introduction (feel free to repeat some things from the other file).</p>
+</section>
+<section id="data-split" class="level2">
+<h2 class="anchored" data-anchor-id="data-split">Data Split</h2>
+<p>Then, split the data into a training (70% of the data) and test set (30% of the data). Set a seed to make things reproducible.</p>
+<p>The goal is to create models for predicting the Diabetes_binary variable (using tidymodels). We’ll use log-loss as our metric to evaluate the models. For both model types, use log-loss with 5 fold cross-validation to select the best model from that family of models. You should set up your own grid of tuning parameters for each model (even if it is just the number of levels to look at).</p>
+</section>
+<section id="classification-tree" class="level2">
+<h2 class="anchored" data-anchor-id="classification-tree">Classification Tree</h2>
+<p>You should provide a thorough explanation of what a classification tree model is. Then you should fit a classification tree with varying values for the complexity parameter and choose the best model (based on 5 fold CV on the training set). Include at least 5 predictors in this model.</p>
+</section>
+<section id="random-forest" class="level2">
+<h2 class="anchored" data-anchor-id="random-forest">Random Forest</h2>
+<p>You should provide a thorough explanation of what a random forest is and why we might use it (be sure to relate this to a basic classification tree). You should then fit a random forest model with varying values for the mtry parameter and choose the best model (based on 5 fold CV on the training set). Include at least 5 predictors in this model.</p>
+</section>
+<section id="final-model-selection" class="level2">
+<h2 class="anchored" data-anchor-id="final-model-selection">Final Model Selection</h2>
+<p>You should now have two best models (one for each model type above). Compare both models on the test set and declare an overall winner!</p>
 
 
+</section>
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
