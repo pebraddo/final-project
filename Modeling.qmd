@@ -4,19 +4,38 @@ format: html
 editor: 
   markdown: 
     wrap: 72
+author: Powell Braddock
 ---
 
 # Modeling
 
 ## Introduction
 
-Start with a basic introduction (feel free to repeat some things from
-the other file).
+This page is a continuation of the EDA page for the project addressing
+the creation and selection of a predictive model on the [Diabetes Health
+Indicators
+Dataset](https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset/)
+from Kaggle.
+
+The target (or response) variable is `Diabetes_binary`, where there are
+two classes: **No Diabetes** and **Prediabetes or Diabetes**. We are
+using all 21 predictor variables:
+`HighBP, HighChol, CholCheck, BMI, Smoker, Stroke, HeartDiseaseorAttack, PhysActivity, Fruits, Veggies, HvyAlcoholConsump, AnyHealthcare, NoDocbcCost, Genhlth, MentHlth, PhysHlth, DiffWalk, Sex, Age, Education,`
+and `Income.` We are treating everything but `BMI` as a categorical
+variable and `BMI` as a numeric variable.
+
+In this page, we will explore and select a model that **predicts the
+status of diabetes** in a patient the best.
+
+We will use `tidymodels`, the log-loss metric, and 5 fold
+cross-validation to select the best model from each of the two families
+of models, then compare the two best models from each family.
 
 ## Data Split
 
-Then, split the data into a training (70% of the data) and test set (30%
-of the data). Set a seed to make things reproducible.
+Initally, we need to split the data into a training (70% of the data)
+and test set (30% of the data). We've set a seed to make things
+reproducible.
 
 ```{r}
 diabetes_convert <- readRDS('diabetes_convert.rds')
@@ -31,12 +50,7 @@ diabetes_test <- testing(diabetes_split)
 
 ```
 
-The goal is to create models for predicting the Diabetes_binary variable
-(using tidymodels). We’ll use log-loss as our metric to evaluate the
-models. For both model types, use log-loss with 5 fold cross-validation
-to select the best model from that family of models. You should set up
-your own grid of tuning parameters for each model (even if it is just
-the number of levels to look at).
+## Cross Validation Folds
 
 We are using our split data to create our 5 cross validation folds.
 
@@ -62,13 +76,16 @@ diabetes_rec
 
 ## Classification Tree
 
-You should provide a thorough explanation of what a classification tree
-model is. Then you should fit a classification tree with varying values
-for the complexity parameter and choose the best model (based on 5 fold
-CV on the training set). Include at least 5 predictors in this model.
+A classification tree model is a model that usually uses the most
+prevalent class in a region as the prediction. The response is a
+categorical variable, in our case: the `Diabetes_binary` variable. We
+will split the predictor space up into region and makes the prediction
+based on which space an observation ends up in. Classification trees are
+nonlinear and are fairly easy to interpret!
 
-Let's define the model and the engine, where we want to using a tuning
-grid to find the optimal `cost_complexity`.
+Let's begin by defining the classification tree model using
+`decision_tree()` and specify `cost_complexity` as a parameter to be
+tuned, along with `rpart` as the engine.
 
 ```{r}
 tree_mod <- 
@@ -88,11 +105,17 @@ tree_wkf <- workflow() |>
   add_model(tree_mod)
 ```
 
+Now we can create our tuning grid that will help us find the optimal
+`cost_complexity` we will tune for.
+
 ```{r}
 tree_grid <- tibble(
   cost_complexity = c(0.0001, 0.001, 0.01, 0.1)
 )
 ```
+
+Let's tune! You can see we've included our workflow, resampling on the
+Cross Validation Folds, tuning grid, and the log-loss metric.
 
 ```{r}
 tree_tune <- tune_grid(
@@ -105,15 +128,24 @@ tree_tune <- tune_grid(
 tree_tune
 ```
 
+Now let's see how each of those models created performed when predicting
+the training set.
+
 ```{r}
 tree_tune |>
   collect_metrics()
 ```
 
+Looks to me like the second model, with a `cost_complexity` of 0.001
+performs the best. We can call it the `best_tree`.
+
 ```{r}
 best_tree <- select_best(tree_tune, metric = 'mn_log_loss')
 best_tree
 ```
+
+Let's finalize that tree's fit into the object `tree_final_fit` we will
+use later.
 
 ```{r}
 tree_final_wkf <- tree_wkf |>
@@ -124,11 +156,21 @@ tree_final_fit <- tree_final_wkf |>
 
 ## Random Forest
 
-You should provide a thorough explanation of what a random forest is and
-why we might use it (be sure to relate this to a basic classification
-tree). You should then fit a random forest model with varying values for
-the mtry parameter and choose the best model (based on 5 fold CV on the
-training set). Include at least 5 predictors in this model.
+A Random Forest Model is an ensemble tree method where multiple trees
+are created from bootstrap samples. These average results are what are
+used to make the final prediction, and also help the overall model to
+not become 'overfit'. Random Forests are less prone to drastic changes
+in prediction with small changes in inputs than the classification tree
+models. Let's see if we find that to be true for this data!
+
+Let's begin by defining the random forest model using `rand_forest()`
+and specify `mtry` as a parameter to be tuned, along with `ranger` as
+the engine. I also like the look and feel of the importance plot from
+the previous homework, so I included the importance specification as
+'impurity'.
+
+I've also created the workflow, which uses the same recipe as before,
+but the random forest model this time.
 
 ```{r}
 rf_mod <- rand_forest(mtry=tune(), trees=50) |>
@@ -139,6 +181,9 @@ rf_wkf <- workflow() |>
   add_model(rf_mod)
 ```
 
+Let's fit the random forest models using the 5 fold cross-validation
+like before and the log-loss metric.
+
 ```{r}
 rf_fit <- rf_wkf |>
   tune_grid(resamples = diabetes_CV_folds,
@@ -146,14 +191,22 @@ rf_fit <- rf_wkf |>
             metrics = log_loss_metric)
 ```
 
+Now we can compare the log-loss across the family of random forest
+models to choose the 'best'.
+
 ```{r}
 rf_fit |> collect_metrics()
 ```
+
+Looks like our 'best' model is the one with an mtry value of 4!
 
 ```{r}
 best_forest <- select_best(rf_fit, metric = 'mn_log_loss')
 best_forest
 ```
+
+We can finalize that model's fit to use and compare with the
+classification tree 'best' model.
 
 ```{r}
 rf_final_wkf <- rf_wkf |>
@@ -164,8 +217,8 @@ rf_final_fit <- rf_final_wkf |>
 
 ## Final Model Selection
 
-You should now have two best models (one for each model type above).
-Compare both models on the test set and declare an overall winner!
+We now have two best models: Classification Tree and Random Forest.
+Let's compare both models on the test set and declare an overall winner!
 
 ```{r}
 rbind(
@@ -177,10 +230,19 @@ rbind(
     mutate(Model = 'Random Forest', .before = '.metric'))
 ```
 
+Close call! It appears that the Random Forest Model was (slightly)
+better at predicting on the test set... phew! That aligns with the idea
+that the classification tree model might have overfit on the data and
+the random forest model is more accurate due to the averaging.
+
+We can extract that fit from our 'best overall' model!
+
 ```{r}
 rf_final_fit |>
   extract_fit_parsnip()
 ```
+
+Now let's use the script from homework 9 to create the importance plot.
 
 ```{r}
 get_rand_for_importance <- function(x) {
@@ -206,4 +268,17 @@ ggplot(cells_resampling_2, aes(x=Variable, y=Importance)) +
   geom_bar(stat = 'identity')+
   labs(title='Variable Importance for Random Forest Model', x='Variable', y='Importance') +
   coord_flip()
+```
+
+BMI, as I secretly thought, is the MOST important variable for
+predicting the status of diabetes. This super important variable is
+followed closely by Age and General Health. Physical Health, Income, and
+High Blood Pressure are the fourth, fifth, and sixth most importance for
+this model.
+
+Check out the API next to see how your attributes round up to predict
+your diabetes status....
+
+```{r}
+saveRDS(rf_final_fit, file = 'rf_final_fit.rds')
 ```

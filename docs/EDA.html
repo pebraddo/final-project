@@ -6,6 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Powell Braddock">
 
 <title>EDA</title>
 <style>
@@ -125,6 +126,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Powell Braddock </p>
+          </div>
+  </div>
     
   
     
@@ -137,9 +144,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>You should have an introduction section that</p>
-<p>• briefly describes the data and the variables you have to work with (just discuss the ones you’ll investigate/use in your analysis).</p>
-<p>• describes the purpose of your EDA and ultimate goal of modeling.</p>
+<p>This project addresses the creation and selection of a predictive model on the <a href="https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset/">Diabetes Health Indicators Dataset</a> from Kaggle. The target (or response) variable is <code>Diabetes_binary</code>, where there are two classes: <strong>No Diabetes</strong> and <strong>Prediabetes or Diabetes</strong>. We will use all 21 predictor variables: <code>HighBP, HighChol, CholCheck, BMI, Smoker, Stroke, HeartDiseaseorAttack, PhysActivity, Fruits, Veggies, HvyAlcoholConsump, AnyHealthcare, NoDocbcCost, Genhlth, MentHlth, PhysHlth, DiffWalk, Sex, Age, Education,</code> and <code>Income.</code> We will treat everything but <code>BMI</code> as a categorical variable and <code>BMI</code> as a numeric variable.</p>
+<p>In this page, we will explore both categorical and numeric variables that we will model in the following page to finally select a model that <strong>predicts the status of diabetes</strong> in a patient the best.</p>
 </section>
 <section id="data" class="level1">
 <h1>Data</h1>
@@ -195,8 +201,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="ot">&lt;-</span> diabetes_data <span class="sc">|&gt;</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Diabetes_binary =</span> <span class="fu">factor</span>(Diabetes_binary, </span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">levels=</span><span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">2</span>), </span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">labels=</span><span class="fu">c</span>(<span class="st">'No Diabetes'</span>, <span class="st">'Prediabetes'</span>,<span class="st">'Diabetes'</span>)),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">levels=</span><span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">labels=</span><span class="fu">c</span>(<span class="st">'No Diabetes'</span>, <span class="st">'Prediabetes or Diabetes'</span>)),</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">HighBP =</span> <span class="fu">factor</span>(HighBP,</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>                         <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>),</span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                         <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">'No High BP'</span>, <span class="st">'High BP'</span>)),</span>
@@ -394,14 +400,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>                                       <span class="st">"IQR"</span> <span class="ot">=</span> IQR), <span class="at">.names =</span> <span class="st">"{.fn}_{.col}"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 2 × 6
-  Diabetes_binary mean_BMI median_BMI var_BMI sd_BMI IQR_BMI
-  &lt;fct&gt;              &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
-1 No Diabetes         27.8         27    39.6   6.29       7
-2 Prediabetes         31.9         31    54.2   7.36       8</code></pre>
+  Diabetes_binary         mean_BMI median_BMI var_BMI sd_BMI IQR_BMI
+  &lt;fct&gt;                      &lt;dbl&gt;      &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;
+1 No Diabetes                 27.8         27    39.6   6.29       7
+2 Prediabetes or Diabetes     31.9         31    54.2   7.36       8</code></pre>
 </div>
 </div>
-<p>Excellent, now we can see the differences in the mean, median, variance, standard deviation, and interquartile range of the BMIs for both patients with no diabetic status and prediabetic status.</p>
-<p>Patients with prediabetic status have a 4 point average and median difference of BMI from patients with no diabetes. The variance and standard deviations are also wider for prediabetic patients than those without diabetes.</p>
+<p>Excellent, now we can see the differences in the mean, median, variance, standard deviation, and interquartile range of the BMIs for both patients with no diabetic status and prediabetic/diabetic status.</p>
+<p>Patients with prediabetic/diabetic status have a 4 point average and median difference of BMI from patients with no diabetes. The variance and standard deviations are also wider for prediabetic/diabetic patients than those without diabetes.</p>
 <p>Let’s check out the <strong>contingency table</strong> of sex versus diabetic status.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="sc">|&gt;</span></span>
@@ -415,15 +421,15 @@ argument.</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 4 × 4
 # Groups:   Sex [2]
-  Sex    Diabetes_binary  count Proportion
-  &lt;fct&gt;  &lt;fct&gt;            &lt;int&gt;      &lt;dbl&gt;
-1 Female No Diabetes     123563      0.870
-2 Female Prediabetes      18411      0.130
-3 Male   No Diabetes      94771      0.848
-4 Male   Prediabetes      16935      0.152</code></pre>
+  Sex    Diabetes_binary          count Proportion
+  &lt;fct&gt;  &lt;fct&gt;                    &lt;int&gt;      &lt;dbl&gt;
+1 Female No Diabetes             123563      0.870
+2 Female Prediabetes or Diabetes  18411      0.130
+3 Male   No Diabetes              94771      0.848
+4 Male   Prediabetes or Diabetes  16935      0.152</code></pre>
 </div>
 </div>
-<p>Perfect! We can see that for females, the proportion of patients with prediabetes versus no diabetes is around 13%, while 15% of the male patients are prediabetic. I wonder what else we can find…</p>
+<p>Perfect! We can see that for females, the proportion of patients with prediabetes/diabetes versus no diabetes is around 13%, while 15% of the male patients are prediabetic/diabetic. I wonder what else we can find…</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="sc">|&gt;</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Age, Diabetes_binary) <span class="sc">|&gt;</span></span>
@@ -436,22 +442,22 @@ argument.</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 26 × 4
 # Groups:   Age [13]
-   Age   Diabetes_binary count Proportion
-   &lt;fct&gt; &lt;fct&gt;           &lt;int&gt;      &lt;dbl&gt;
- 1 18-24 No Diabetes      5622     0.986 
- 2 18-24 Prediabetes        78     0.0137
- 3 25-29 No Diabetes      7458     0.982 
- 4 25-29 Prediabetes       140     0.0184
- 5 30-34 No Diabetes     10809     0.972 
- 6 30-34 Prediabetes       314     0.0282
- 7 35-39 No Diabetes     13197     0.955 
- 8 35-39 Prediabetes       626     0.0453
- 9 40-44 No Diabetes     15106     0.935 
-10 40-44 Prediabetes      1051     0.0650
+   Age   Diabetes_binary         count Proportion
+   &lt;fct&gt; &lt;fct&gt;                   &lt;int&gt;      &lt;dbl&gt;
+ 1 18-24 No Diabetes              5622     0.986 
+ 2 18-24 Prediabetes or Diabetes    78     0.0137
+ 3 25-29 No Diabetes              7458     0.982 
+ 4 25-29 Prediabetes or Diabetes   140     0.0184
+ 5 30-34 No Diabetes             10809     0.972 
+ 6 30-34 Prediabetes or Diabetes   314     0.0282
+ 7 35-39 No Diabetes             13197     0.955 
+ 8 35-39 Prediabetes or Diabetes   626     0.0453
+ 9 40-44 No Diabetes             15106     0.935 
+10 40-44 Prediabetes or Diabetes  1051     0.0650
 # ℹ 16 more rows</code></pre>
 </div>
 </div>
-<p>It appears that the proportion of prediabetic vs.&nbsp;non-diabetic patients increases until age group 70-74, then it decreases a little.</p>
+<p>It appears that the proportion of prediabetic/diabetic vs.&nbsp;non-diabetic patients increases until age group 70-74, then it decreases a little.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="sc">|&gt;</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(AnyHealthcare,HighBP,HighChol, Diabetes_binary) <span class="sc">|&gt;</span></span>
@@ -465,27 +471,28 @@ can override using the `.groups` argument.</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 16 × 6
 # Groups:   AnyHealthcare, HighBP, HighChol [8]
-   AnyHealthcare     HighBP     HighChol    Proportion `No Diabetes` Prediabetes
-   &lt;fct&gt;             &lt;fct&gt;      &lt;fct&gt;            &lt;dbl&gt;         &lt;int&gt;       &lt;int&gt;
- 1 Has No Healthcare No High BP No High Ch…     0.969           6199          NA
- 2 Has No Healthcare No High BP No High Ch…     0.0313            NA         200
- 3 Has No Healthcare No High BP High Chole…     0.883           1529          NA
- 4 Has No Healthcare No High BP High Chole…     0.117             NA         203
- 5 Has No Healthcare High BP    No High Ch…     0.847           1604          NA
- 6 Has No Healthcare High BP    No High Ch…     0.153             NA         290
- 7 Has No Healthcare High BP    High Chole…     0.695           1663          NA
- 8 Has No Healthcare High BP    High Chole…     0.305             NA         729
- 9 Has Healthcare    No High BP No High Ch…     0.957          91452          NA
-10 Has Healthcare    No High BP No High Ch…     0.0426            NA        4069
-11 Has Healthcare    No High BP High Chole…     0.896          36929          NA
-12 Has Healthcare    No High BP High Chole…     0.104             NA        4270
-13 Has Healthcare    High BP    No High Ch…     0.832          35174          NA
-14 Has Healthcare    High BP    No High Ch…     0.168             NA        7101
-15 Has Healthcare    High BP    High Chole…     0.703          43784          NA
-16 Has Healthcare    High BP    High Chole…     0.297             NA       18484</code></pre>
+   AnyHealthcare HighBP HighChol Proportion `No Diabetes` Prediabetes or Diabe…¹
+   &lt;fct&gt;         &lt;fct&gt;  &lt;fct&gt;         &lt;dbl&gt;         &lt;int&gt;                  &lt;int&gt;
+ 1 Has No Healt… No Hi… No High…     0.969           6199                     NA
+ 2 Has No Healt… No Hi… No High…     0.0313            NA                    200
+ 3 Has No Healt… No Hi… High Ch…     0.883           1529                     NA
+ 4 Has No Healt… No Hi… High Ch…     0.117             NA                    203
+ 5 Has No Healt… High … No High…     0.847           1604                     NA
+ 6 Has No Healt… High … No High…     0.153             NA                    290
+ 7 Has No Healt… High … High Ch…     0.695           1663                     NA
+ 8 Has No Healt… High … High Ch…     0.305             NA                    729
+ 9 Has Healthca… No Hi… No High…     0.957          91452                     NA
+10 Has Healthca… No Hi… No High…     0.0426            NA                   4069
+11 Has Healthca… No Hi… High Ch…     0.896          36929                     NA
+12 Has Healthca… No Hi… High Ch…     0.104             NA                   4270
+13 Has Healthca… High … No High…     0.832          35174                     NA
+14 Has Healthca… High … No High…     0.168             NA                   7101
+15 Has Healthca… High … High Ch…     0.703          43784                     NA
+16 Has Healthca… High … High Ch…     0.297             NA                  18484
+# ℹ abbreviated name: ¹​`Prediabetes or Diabetes`</code></pre>
 </div>
 </div>
-<p>This contingency table tells an interesting story…patients with no healthcare, high blood pressure, and high cholesterol have the highest rates of prediabetes.</p>
+<p>This contingency table tells an interesting story…patients with no healthcare, high blood pressure, and high cholesterol have the highest rates of prediabetes/diabetes.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="sc">|&gt;</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Income,Diabetes_binary) <span class="sc">|&gt;</span></span>
@@ -499,27 +506,27 @@ can override using the `.groups` argument.</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 16 × 4
 # Groups:   Income [8]
-   Income            Proportion `No Diabetes` Prediabetes
-   &lt;fct&gt;                  &lt;dbl&gt;         &lt;int&gt;       &lt;int&gt;
- 1 Less than $10,000     0.757           7428          NA
- 2 Less than $10,000     0.243             NA        2383
- 3 $10,000 - $15,000     0.738           8697          NA
- 4 $10,000 - $15,000     0.262             NA        3086
- 5 $15,000 - $20,000     0.777          12426          NA
- 6 $15,000 - $20,000     0.223             NA        3568
- 7 $20,000 - $25,000     0.799          16081          NA
- 8 $20,000 - $25,000     0.201             NA        4054
- 9 $25,000 - $35,000     0.826          21379          NA
-10 $25,000 - $35,000     0.174             NA        4504
-11 $35,000 - $50,000     0.855          31179          NA
-12 $35,000 - $50,000     0.145             NA        5291
-13 $50,000 - $75,000     0.878          37954          NA
-14 $50,000 - $75,000     0.122             NA        5265
-15 $75,000 or More       0.920          83190          NA
-16 $75,000 or More       0.0796            NA        7195</code></pre>
+   Income            Proportion `No Diabetes` `Prediabetes or Diabetes`
+   &lt;fct&gt;                  &lt;dbl&gt;         &lt;int&gt;                     &lt;int&gt;
+ 1 Less than $10,000     0.757           7428                        NA
+ 2 Less than $10,000     0.243             NA                      2383
+ 3 $10,000 - $15,000     0.738           8697                        NA
+ 4 $10,000 - $15,000     0.262             NA                      3086
+ 5 $15,000 - $20,000     0.777          12426                        NA
+ 6 $15,000 - $20,000     0.223             NA                      3568
+ 7 $20,000 - $25,000     0.799          16081                        NA
+ 8 $20,000 - $25,000     0.201             NA                      4054
+ 9 $25,000 - $35,000     0.826          21379                        NA
+10 $25,000 - $35,000     0.174             NA                      4504
+11 $35,000 - $50,000     0.855          31179                        NA
+12 $35,000 - $50,000     0.145             NA                      5291
+13 $50,000 - $75,000     0.878          37954                        NA
+14 $50,000 - $75,000     0.122             NA                      5265
+15 $75,000 or More       0.920          83190                        NA
+16 $75,000 or More       0.0796            NA                      7195</code></pre>
 </div>
 </div>
-<p>26.2% of patients in the $10k to $15k income range have prediabetic status, which is the highest percentage across income groups, followed by 24.2% of patients in the $10k or less income group.</p>
+<p>26.2% of patients in the $10k to $15k income range have prediabetic/diabetic status, which is the highest percentage across income groups, followed by 24.2% of patients in the $10k or less income group.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="sc">|&gt;</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Education, Diabetes_binary) <span class="sc">|&gt;</span></span>
@@ -533,23 +540,24 @@ can override using the `.groups` argument.</code></pre>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 12 × 4
 # Groups:   Education [6]
-   Education                                Proportion `No Diabetes` Prediabetes
-   &lt;fct&gt;                                         &lt;dbl&gt;         &lt;int&gt;       &lt;int&gt;
- 1 Never attended school or only kindergar…     0.730            127          NA
- 2 Never attended school or only kindergar…     0.270             NA          47
- 3 Grades 1-8 (Elementary)                      0.707           2860          NA
- 4 Grades 1-8 (Elementary)                      0.293             NA        1183
- 5 Grades 9-11 (Some high School)               0.758           7182          NA
- 6 Grades 9-11 (Some high School)               0.242             NA        2296
- 7 Grade 12 or GED (High School Graduate)       0.824          51684          NA
- 8 Grade 12 or GED (High School Graduate)       0.176             NA       11066
- 9 College 1 Year to 3 Years (Some College…     0.852          59556          NA
-10 College 1 Year to 3 Years (Some College…     0.148             NA       10354
-11 College 4 Years or More (College Gradua…     0.903          96925          NA
-12 College 4 Years or More (College Gradua…     0.0969            NA       10400</code></pre>
+   Education                     Proportion `No Diabetes` Prediabetes or Diabe…¹
+   &lt;fct&gt;                              &lt;dbl&gt;         &lt;int&gt;                  &lt;int&gt;
+ 1 Never attended school or onl…     0.730            127                     NA
+ 2 Never attended school or onl…     0.270             NA                     47
+ 3 Grades 1-8 (Elementary)           0.707           2860                     NA
+ 4 Grades 1-8 (Elementary)           0.293             NA                   1183
+ 5 Grades 9-11 (Some high Schoo…     0.758           7182                     NA
+ 6 Grades 9-11 (Some high Schoo…     0.242             NA                   2296
+ 7 Grade 12 or GED (High School…     0.824          51684                     NA
+ 8 Grade 12 or GED (High School…     0.176             NA                  11066
+ 9 College 1 Year to 3 Years (S…     0.852          59556                     NA
+10 College 1 Year to 3 Years (S…     0.148             NA                  10354
+11 College 4 Years or More (Col…     0.903          96925                     NA
+12 College 4 Years or More (Col…     0.0969            NA                  10400
+# ℹ abbreviated name: ¹​`Prediabetes or Diabetes`</code></pre>
 </div>
 </div>
-<p>Folks with only elementary education (29.3%) or lower (27%) had a much higher proportion of prediabetes status than any further education category.</p>
+<p>Folks with only elementary education (29.3%) or lower (27%) had a much higher proportion of prediabetes/diabetes status than any further education category.</p>
 <p>We can now check to see the diabetes status, sex, age, and BMI statistics all in one table.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>summary_stats <span class="ot">&lt;-</span> diabetes_convert <span class="sc">|&gt;</span> </span>
@@ -585,7 +593,7 @@ using the `.groups` argument.</code></pre>
 </div>
 </div>
 <p>This is hard to comprehend, so let’s turn it into a nice plot.</p>
-<p>I’m using faceting to show the average BMI for non-diabetics versus prediabetics and sex across age groups.</p>
+<p>I’m using faceting to show the average BMI for non-diabetics versus prediabetics/diabetic and sex across age groups.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(summary_stats, <span class="fu">aes</span>(<span class="at">x =</span> Diabetes_binary, <span class="at">y=</span>mean_BMI, <span class="at">fill =</span> Sex)) <span class="sc">+</span></span>
@@ -603,7 +611,7 @@ using the `.groups` argument.</code></pre>
 </div>
 </div>
 </div>
-<p>We can see that in each age group, regardless of the sex of the patient, patients with prediabetes have higher average BMIs than patients with no diabetes status.</p>
+<p>We can see that in each age group, regardless of the sex of the patient, patients with prediabetes/diabetes have higher average BMIs than patients with no diabetes status.</p>
 <p>Let’s check out a density plot to investigate the BMI variable.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(diabetes_convert, <span class="fu">aes</span>(<span class="at">x=</span>BMI,<span class="at">fill=</span>Diabetes_binary, <span class="at">alpha =</span> <span class="dv">5</span>, <span class="at">linetype =</span> Sex)) <span class="sc">+</span></span>
@@ -617,7 +625,10 @@ using the `.groups` argument.</code></pre>
 </div>
 </div>
 </div>
-<p>This density plot shows the varying frequencies of each BMI across both Diabetes Status and Sex. The ‘No Diabetes’ and ‘Prediabetes’ plots both have similar shapes, but the ‘No Diabetes’ plot is centered around a lower BMI. There appear to be more male patients than female patients as well. Both male and female patients follow similar patterns within the plots and there are only a few patients with BMIs greater than 50: where these are exclusively prediabetic patients.</p>
+<p>This density plot shows the varying frequencies of each BMI across both Diabetes Status and Sex. The ‘No Diabetes’ and ‘Prediabetes or Diabetes’ plots both have similar shapes, but the ‘No Diabetes’ plot is centered around a lower BMI. There appear to be more male patients than female patients as well. Both male and female patients follow similar patterns within the plots and there are only a few patients with BMIs greater than 50: where these are exclusively prediabetic/diabetic patients.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(diabetes_convert, <span class="st">'diabetes_convert.rds'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
 <p><a href="Modeling.html">Click here for the Modeling Page</a></p>
 
 

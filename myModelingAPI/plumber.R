@@ -1,7 +1,7 @@
 #myModelingAPI.R 
 
 
-#load in data and best model from Modeling.qmd
+#load in data and best model from Modeling2.qmd
 modeling_data <- diabetes_convert
 final_rf_model <- extract_workflow(rf_final_fit) |>
   fit(data= modeling_data)
@@ -129,6 +129,8 @@ function(){
   )
   
   print(autoplot(cm, type = 'heatmap'))
-  }
-#http://localhost:PORT/plotiris?type=ggally
+}
+
+#http://127.0.0.1:27709/plotconfusion
+
 

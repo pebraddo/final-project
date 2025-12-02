@@ -1,15 +1,14 @@
 ---
 title: "EDA"
 format: html
+author: Powell Braddock
 ---
 
 # Introduction
 
-You should have an introduction section that
+This project addresses the creation and selection of a predictive model on the [Diabetes Health Indicators Dataset](https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset/) from Kaggle. The target (or response) variable is `Diabetes_binary`, where there are two classes: **No Diabetes** and **Prediabetes or Diabetes**. We will use all 21 predictor variables: `HighBP, HighChol, CholCheck, BMI, Smoker, Stroke, HeartDiseaseorAttack, PhysActivity, Fruits, Veggies, HvyAlcoholConsump, AnyHealthcare, NoDocbcCost, Genhlth, MentHlth, PhysHlth, DiffWalk, Sex, Age, Education,` and `Income.` We will treat everything but `BMI` as a categorical variable and `BMI` as a numeric variable.
 
-• briefly describes the data and the variables you have to work with (just discuss the ones you’ll investigate/use in your analysis).
-
-• describes the purpose of your EDA and ultimate goal of modeling.
+In this page, we will explore both categorical and numeric variables that we will model in the following page to finally select a model that **predicts the status of diabetes** in a patient the best.
 
 # Data
 
@@ -26,8 +25,8 @@ That is quite interesting... our initial data makes no sense! Most of these vari
 ```{r}
 diabetes_convert <- diabetes_data |>
   mutate(Diabetes_binary = factor(Diabetes_binary, 
-                                  levels=c(0, 1, 2), 
-                                  labels=c('No Diabetes', 'Prediabetes','Diabetes')),
+                                  levels=c(0, 1), 
+                                  labels=c('No Diabetes', 'Prediabetes or Diabetes')),
          HighBP = factor(HighBP,
                          levels = c(0, 1),
                          labels = c('No High BP', 'High BP')),
@@ -142,9 +141,9 @@ diabetes_convert |>
                                        "IQR" = IQR), .names = "{.fn}_{.col}"))
 ```
 
-Excellent, now we can see the differences in the mean, median, variance, standard deviation, and interquartile range of the BMIs for both patients with no diabetic status and prediabetic status.
+Excellent, now we can see the differences in the mean, median, variance, standard deviation, and interquartile range of the BMIs for both patients with no diabetic status and prediabetic/diabetic status.
 
-Patients with prediabetic status have a 4 point average and median difference of BMI from patients with no diabetes. The variance and standard deviations are also wider for prediabetic patients than those without diabetes.
+Patients with prediabetic/diabetic status have a 4 point average and median difference of BMI from patients with no diabetes. The variance and standard deviations are also wider for prediabetic/diabetic patients than those without diabetes.
 
 Let's check out the **contingency table** of sex versus diabetic status.
 
@@ -155,7 +154,7 @@ diabetes_convert |>
   mutate(Proportion = count/sum(count)) 
 ```
 
-Perfect! We can see that for females, the proportion of patients with prediabetes versus no diabetes is around 13%, while 15% of the male patients are prediabetic. I wonder what else we can find...
+Perfect! We can see that for females, the proportion of patients with prediabetes/diabetes versus no diabetes is around 13%, while 15% of the male patients are prediabetic/diabetic. I wonder what else we can find...
 
 ```{r}
 diabetes_convert |>
@@ -165,7 +164,7 @@ diabetes_convert |>
   
 ```
 
-It appears that the proportion of prediabetic vs. non-diabetic patients increases until age group 70-74, then it decreases a little.
+It appears that the proportion of prediabetic/diabetic vs. non-diabetic patients increases until age group 70-74, then it decreases a little.
 
 ```{r}
 diabetes_convert |>
@@ -175,7 +174,7 @@ diabetes_convert |>
   pivot_wider(names_from = Diabetes_binary, values_from = count)
 ```
 
-This contingency table tells an interesting story...patients with no healthcare, high blood pressure, and high cholesterol have the highest rates of prediabetes.
+This contingency table tells an interesting story...patients with no healthcare, high blood pressure, and high cholesterol have the highest rates of prediabetes/diabetes.
 
 ```{r}
 diabetes_convert |>
@@ -185,7 +184,7 @@ diabetes_convert |>
   pivot_wider(names_from = Diabetes_binary, values_from = count)
 ```
 
-26.2% of patients in the \$10k to \$15k income range have prediabetic status, which is the highest percentage across income groups, followed by 24.2% of patients in the \$10k or less income group.
+26.2% of patients in the \$10k to \$15k income range have prediabetic/diabetic status, which is the highest percentage across income groups, followed by 24.2% of patients in the \$10k or less income group.
 
 ```{r}
 diabetes_convert |>
@@ -195,7 +194,7 @@ diabetes_convert |>
   pivot_wider(names_from = Diabetes_binary, values_from = count)
 ```
 
-Folks with only elementary education (29.3%) or lower (27%) had a much higher proportion of prediabetes status than any further education category.
+Folks with only elementary education (29.3%) or lower (27%) had a much higher proportion of prediabetes/diabetes status than any further education category.
 
 We can now check to see the diabetes status, sex, age, and BMI statistics all in one table.
 
@@ -214,7 +213,7 @@ summary_stats
 
 This is hard to comprehend, so let's turn it into a nice plot.
 
-I'm using faceting to show the average BMI for non-diabetics versus prediabetics and sex across age groups.
+I'm using faceting to show the average BMI for non-diabetics versus prediabetics/diabetic and sex across age groups.
 
 ```{r}
 library(ggplot2)
@@ -227,7 +226,7 @@ ggplot(summary_stats, aes(x = Diabetes_binary, y=mean_BMI, fill = Sex)) +
   guides(x=guide_axis(n.dodge = 2))
 ```
 
-We can see that in each age group, regardless of the sex of the patient, patients with prediabetes have higher average BMIs than patients with no diabetes status.
+We can see that in each age group, regardless of the sex of the patient, patients with prediabetes/diabetes have higher average BMIs than patients with no diabetes status.
 
 Let's check out a density plot to investigate the BMI variable.
 
@@ -237,6 +236,10 @@ ggplot(diabetes_convert, aes(x=BMI,fill=Diabetes_binary, alpha = 5, linetype = S
   labs(title = 'Density of BMI Across Diabetes Status and Sex')
 ```
 
-This density plot shows the varying frequencies of each BMI across both Diabetes Status and Sex. The 'No Diabetes' and 'Prediabetes' plots both have similar shapes, but the 'No Diabetes' plot is centered around a lower BMI. There appear to be more male patients than female patients as well. Both male and female patients follow similar patterns within the plots and there are only a few patients with BMIs greater than 50: where these are exclusively prediabetic patients.
+This density plot shows the varying frequencies of each BMI across both Diabetes Status and Sex. The 'No Diabetes' and 'Prediabetes or Diabetes' plots both have similar shapes, but the 'No Diabetes' plot is centered around a lower BMI. There appear to be more male patients than female patients as well. Both male and female patients follow similar patterns within the plots and there are only a few patients with BMIs greater than 50: where these are exclusively prediabetic/diabetic patients.
+
+```{r}
+saveRDS(diabetes_convert, 'diabetes_convert.rds')
+```
 
 [Click here for the Modeling Page](Modeling.html)

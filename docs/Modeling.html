@@ -6,6 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Powell Braddock">
 
 <title>Modeling</title>
 <style>
@@ -125,6 +126,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div class="quarto-title-meta">
 
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Powell Braddock </p>
+          </div>
+  </div>
     
   
     
@@ -139,11 +146,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h1>Modeling</h1>
 <section id="introduction" class="level2">
 <h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
-<p>Start with a basic introduction (feel free to repeat some things from the other file).</p>
+<p>This page is a continuation of the EDA page for the project addressing the creation and selection of a predictive model on the <a href="https://www.kaggle.com/datasets/alexteboul/diabetes-health-indicators-dataset/">Diabetes Health Indicators Dataset</a> from Kaggle.</p>
+<p>The target (or response) variable is <code>Diabetes_binary</code>, where there are two classes: <strong>No Diabetes</strong> and <strong>Prediabetes or Diabetes</strong>. We are using all 21 predictor variables: <code>HighBP, HighChol, CholCheck, BMI, Smoker, Stroke, HeartDiseaseorAttack, PhysActivity, Fruits, Veggies, HvyAlcoholConsump, AnyHealthcare, NoDocbcCost, Genhlth, MentHlth, PhysHlth, DiffWalk, Sex, Age, Education,</code> and <code>Income.</code> We are treating everything but <code>BMI</code> as a categorical variable and <code>BMI</code> as a numeric variable.</p>
+<p>In this page, we will explore and select a model that <strong>predicts the status of diabetes</strong> in a patient the best.</p>
+<p>We will use <code>tidymodels</code>, the log-loss metric, and 5 fold cross-validation to select the best model from each of the two families of models, then compare the two best models from each family.</p>
 </section>
 <section id="data-split" class="level2">
 <h2 class="anchored" data-anchor-id="data-split">Data Split</h2>
-<p>Then, split the data into a training (70% of the data) and test set (30% of the data). Set a seed to make things reproducible.</p>
+<p>Initally, we need to split the data into a training (70% of the data) and test set (30% of the data). We’ve set a seed to make things reproducible.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>diabetes_convert <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">'diabetes_convert.rds'</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -175,7 +185,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>diabetes_train <span class="ot">&lt;-</span> <span class="fu">training</span>(diabetes_split)</span>
 <span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>diabetes_test <span class="ot">&lt;-</span> <span class="fu">testing</span>(diabetes_split)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>The goal is to create models for predicting the Diabetes_binary variable (using tidymodels). We’ll use log-loss as our metric to evaluate the models. For both model types, use log-loss with 5 fold cross-validation to select the best model from that family of models. You should set up your own grid of tuning parameters for each model (even if it is just the number of levels to look at).</p>
+</section>
+<section id="cross-validation-folds" class="level2">
+<h2 class="anchored" data-anchor-id="cross-validation-folds">Cross Validation Folds</h2>
 <p>We are using our split data to create our 5 cross validation folds.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>diabetes_CV_folds <span class="ot">&lt;-</span> <span class="fu">vfold_cv</span>(diabetes_train, <span class="dv">5</span>, <span class="at">strata =</span> Diabetes_binary)</span>
@@ -232,8 +244,8 @@ predictor: 21</code></pre>
 </section>
 <section id="classification-tree" class="level2">
 <h2 class="anchored" data-anchor-id="classification-tree">Classification Tree</h2>
-<p>You should provide a thorough explanation of what a classification tree model is. Then you should fit a classification tree with varying values for the complexity parameter and choose the best model (based on 5 fold CV on the training set). Include at least 5 predictors in this model.</p>
-<p>Let’s define the model and the engine, where we want to using a tuning grid to find the optimal <code>cost_complexity</code>.</p>
+<p>A classification tree model is a model that usually uses the most prevalent class in a region as the prediction. The response is a categorical variable, in our case: the <code>Diabetes_binary</code> variable. We will split the predictor space up into region and makes the prediction based on which space an observation ends up in. Classification trees are nonlinear and are fairly easy to interpret!</p>
+<p>Let’s begin by defining the classification tree model using <code>decision_tree()</code> and specify <code>cost_complexity</code> as a parameter to be tuned, along with <code>rpart</code> as the engine.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>tree_mod <span class="ot">&lt;-</span> </span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">decision_tree</span>(</span>
@@ -248,11 +260,13 @@ predictor: 21</code></pre>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(diabetes_rec) <span class="sc">|&gt;</span></span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(tree_mod)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Now we can create our tuning grid that will help us find the optimal <code>cost_complexity</code> we will tune for.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>tree_grid <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">cost_complexity =</span> <span class="fu">c</span>(<span class="fl">0.0001</span>, <span class="fl">0.001</span>, <span class="fl">0.01</span>, <span class="fl">0.1</span>)</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Let’s tune! You can see we’ve included our workflow, resampling on the Cross Validation Folds, tuning grid, and the log-loss metric.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>tree_tune <span class="ot">&lt;-</span> <span class="fu">tune_grid</span>(</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  tree_wkf,</span>
@@ -275,6 +289,7 @@ predictor: 21</code></pre>
 5 &lt;split [142062/35514]&gt; Fold5 &lt;tibble [4 × 5]&gt; &lt;tibble [0 × 4]&gt; &lt;tibble&gt;    </code></pre>
 </div>
 </div>
+<p>Now let’s see how each of those models created performed when predicting the training set.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>tree_tune <span class="sc">|&gt;</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -288,6 +303,7 @@ predictor: 21</code></pre>
 4          0.1    mn_log_loss binary     0.403     5 0.00000910 pre0_mod4_post0</code></pre>
 </div>
 </div>
+<p>Looks to me like the second model, with a <code>cost_complexity</code> of 0.001 performs the best. We can call it the <code>best_tree</code>.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>best_tree <span class="ot">&lt;-</span> <span class="fu">select_best</span>(tree_tune, <span class="at">metric =</span> <span class="st">'mn_log_loss'</span>)</span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>best_tree</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -298,6 +314,7 @@ predictor: 21</code></pre>
 1           0.001 pre0_mod2_post0</code></pre>
 </div>
 </div>
+<p>Let’s finalize that tree’s fit into the object <code>tree_final_fit</code> we will use later.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>tree_final_wkf <span class="ot">&lt;-</span> tree_wkf <span class="sc">|&gt;</span></span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(best_tree)</span>
@@ -307,7 +324,9 @@ predictor: 21</code></pre>
 </section>
 <section id="random-forest" class="level2">
 <h2 class="anchored" data-anchor-id="random-forest">Random Forest</h2>
-<p>You should provide a thorough explanation of what a random forest is and why we might use it (be sure to relate this to a basic classification tree). You should then fit a random forest model with varying values for the mtry parameter and choose the best model (based on 5 fold CV on the training set). Include at least 5 predictors in this model.</p>
+<p>A Random Forest Model is an ensemble tree method where multiple trees are created from bootstrap samples. These average results are what are used to make the final prediction, and also help the overall model to not become ‘overfit’. Random Forests are less prone to drastic changes in prediction with small changes in inputs than the classification tree models. Let’s see if we find that to be true for this data!</p>
+<p>Let’s begin by defining the random forest model using <code>rand_forest()</code> and specify <code>mtry</code> as a parameter to be tuned, along with <code>ranger</code> as the engine. I also like the look and feel of the importance plot from the previous homework, so I included the importance specification as ‘impurity’.</p>
+<p>I’ve also created the workflow, which uses the same recipe as before, but the random forest model this time.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>rf_mod <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>(<span class="at">mtry=</span><span class="fu">tune</span>(), <span class="at">trees=</span><span class="dv">50</span>) <span class="sc">|&gt;</span></span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">'ranger'</span>, <span class="at">importance =</span> <span class="st">'impurity'</span>) <span class="sc">|&gt;</span></span>
@@ -316,6 +335,7 @@ predictor: 21</code></pre>
 <span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(diabetes_rec) <span class="sc">|&gt;</span></span>
 <span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(rf_mod)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Let’s fit the random forest models using the 5 fold cross-validation like before and the log-loss metric.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>rf_fit <span class="ot">&lt;-</span> rf_wkf <span class="sc">|&gt;</span></span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tune_grid</span>(<span class="at">resamples =</span> diabetes_CV_folds,</span>
@@ -325,6 +345,7 @@ predictor: 21</code></pre>
 <pre><code>i Creating pre-processing data to finalize 1 unknown parameter: "mtry"</code></pre>
 </div>
 </div>
+<p>Now we can compare the log-loss across the family of random forest models to choose the ‘best’.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>rf_fit <span class="sc">|&gt;</span> <span class="fu">collect_metrics</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -340,6 +361,7 @@ predictor: 21</code></pre>
 7    21 mn_log_loss binary     0.398     5 0.00201  pre0_mod7_post0</code></pre>
 </div>
 </div>
+<p>Looks like our ‘best’ model is the one with an mtry value of 4!</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>best_forest <span class="ot">&lt;-</span> <span class="fu">select_best</span>(rf_fit, <span class="at">metric =</span> <span class="st">'mn_log_loss'</span>)</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>best_forest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -350,6 +372,7 @@ predictor: 21</code></pre>
 1     4 pre0_mod2_post0</code></pre>
 </div>
 </div>
+<p>We can finalize that model’s fit to use and compare with the classification tree ‘best’ model.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>rf_final_wkf <span class="ot">&lt;-</span> rf_wkf <span class="sc">|&gt;</span></span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">finalize_workflow</span>(best_forest)</span>
@@ -359,7 +382,7 @@ predictor: 21</code></pre>
 </section>
 <section id="final-model-selection" class="level2">
 <h2 class="anchored" data-anchor-id="final-model-selection">Final Model Selection</h2>
-<p>You should now have two best models (one for each model type above). Compare both models on the test set and declare an overall winner!</p>
+<p>We now have two best models: Classification Tree and Random Forest. Let’s compare both models on the test set and declare an overall winner!</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">rbind</span>(</span>
 <span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>  tree_final_fit <span class="sc">|&gt;</span> </span>
@@ -376,6 +399,8 @@ predictor: 21</code></pre>
 2 Random Forest       mn_log_loss binary         0.321 pre0_mod0_post0</code></pre>
 </div>
 </div>
+<p>Close call! It appears that the Random Forest Model was (slightly) better at predicting on the test set… phew! That aligns with the idea that the classification tree model might have overfit on the data and the random forest model is more accurate due to the averaging.</p>
+<p>We can extract that fit from our ‘best overall’ model!</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>rf_final_fit <span class="sc">|&gt;</span></span>
 <span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">extract_fit_parsnip</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -398,6 +423,7 @@ Splitrule:                        gini
 OOB prediction error (Brier s.):  0.1001395 </code></pre>
 </div>
 </div>
+<p>Now let’s use the script from homework 9 to create the importance plot.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>get_rand_for_importance <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
 <span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">|&gt;</span> </span>
@@ -456,6 +482,11 @@ OOB prediction error (Brier s.):  0.1001395 </code></pre>
 </figure>
 </div>
 </div>
+</div>
+<p>BMI, as I secretly thought, is the MOST important variable for predicting the status of diabetes. This super important variable is followed closely by Age and General Health. Physical Health, Income, and High Blood Pressure are the fourth, fifth, and sixth most importance for this model.</p>
+<p>Check out the API next to see how your attributes round up to predict your diabetes status….</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(rf_final_fit, <span class="at">file =</span> <span class="st">'rf_final_fit.rds'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 
